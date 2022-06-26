@@ -2,11 +2,16 @@ import { Context } from '../../index';
 import validator from 'validator';
 import bcrypt from 'bcryptjs';
 import JWT from 'jsonwebtoken';
+import { keys } from '../../keys';
 
 interface SignupArgs {
+    credentials: { password: string; email: string };
     name: string;
-    email: string;
-    password: string;
+    bio: string;
+}
+interface SigninArgs {
+    credentials: { password: string; email: string };
+    name: string;
     bio: string;
 }
 
@@ -16,7 +21,9 @@ interface UserPayload {
 }
 
 export default {
-    signup: async (_: any, { name, email, bio, password }: SignupArgs, { prisma }: Context): Promise<UserPayload> => {
+    signup: async (_: any, { credentials, name, bio }: SignupArgs, { prisma }: Context): Promise<UserPayload> => {
+        const { email, password } = credentials;
+
         const isEmail = validator.isEmail(email);
 
         if (!isEmail) {
@@ -54,13 +61,50 @@ export default {
             },
         });
 
-        const token = JWT.sign({ userId: user.id, email }, 'adaada', {
-            expiresIn: 3600,
+        await prisma.profile.create({
+            data: {
+                bio,
+                userId: user.id,
+            },
         });
 
         return {
             userErrors: [],
-            token,
+            token: JWT.sign({ userId: user.id, email }, keys.JWT_SIGNATURE, {
+                expiresIn: 3600,
+            }),
+        };
+    },
+    signin: async (_: any, { credentials }: SigninArgs, { prisma }: Context): Promise<UserPayload> => {
+        const { email, password } = credentials;
+
+        const user = await prisma.user.findUnique({
+            where: {
+                email,
+            },
+        });
+
+        if (!user) {
+            return {
+                userErrors: [{ message: 'invalid credentials' }],
+                token: null,
+            };
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            return {
+                userErrors: [{ message: 'invalid credentials' }],
+                token: null,
+            };
+        }
+
+        return {
+            userErrors: [],
+            token: JWT.sign({ userId: user.id }, keys.JWT_SIGNATURE, {
+                expiresIn: 3600,
+            }),
         };
     },
 };
