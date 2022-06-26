@@ -23,6 +23,7 @@ export const typeDefs = gql`
         content: String!
         createAt: String!
         published: Boolean!
+        authorId: Int!
         user: User!
     }
 
@@ -30,7 +31,6 @@ export const typeDefs = gql`
         id: ID!
         name: String!
         email: String
-        profile: Profile!
         posts: [Post!]!
     }
 
