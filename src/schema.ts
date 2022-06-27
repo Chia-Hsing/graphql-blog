@@ -37,6 +37,7 @@ export const typeDefs = gql`
     type Profile {
         id: ID!
         bio: String!
+        isMyProfile: Boolean!
         user: User!
     }
 
@@ -51,7 +52,7 @@ export const typeDefs = gql`
 
     type AuthPayload {
         userErrors: [UserError!]!
-        token: String!
+        token: String
     }
 
     input PostInput {

@@ -8,6 +8,7 @@ const GET_PROFILE = gql`
     query getProfile($userId: ID!) {
         profile(userId: $userId) {
             bio
+            isMyProfile
             user {
                 id
                 name
@@ -16,6 +17,7 @@ const GET_PROFILE = gql`
                     title
                     content
                     createAt
+                    published
                 }
             }
         }
@@ -30,7 +32,6 @@ export default function Profile() {
             userId: id,
         },
     });
-    console.log('🧬 ~ Profile ~ data, error, loading ', data, error, loading);
 
     if (error) return <div>error page</div>;
 
